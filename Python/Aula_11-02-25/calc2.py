@@ -1,83 +1,79 @@
 import tkinter as tk
+import math
 
-#função para somar dois números 
-def somar():
-    try:
-        valor1 = float(entry_valor1.get())#pega o valor 1
-        valor2 = float(entry_valor1.get())#pega o valor 2
-        resultado = valor1 + valor2
-        label_resultado.config(text=f"Resultado:{resultado}")
-    except ValueError:
-        label_resultado.config(text= "Por favor, Insira numeros validos")
+class CalculatorApp:
+    def __init__(self, master):
+        self.master = master
+        master.title("Calculadora Científica")
 
-root = tk.Tk()
-root.title("Calculadora de Soma")
-label_valor1 = tk.Label(root, text = "Valor 1" , font=("Arial",14))
-label_valor1.grid(row=0, column=0, padx=10, pady=10) 
+        # Variável que guarda a expressão exibida no visor
+        self.expression = tk.StringVar()
 
-label_valor2 = tk.Label(root, text = "Valor 2" , font=("Arial",14))
-label_valor2.grid(row=1, column=0, padx=10, pady=10) 
+        # Configuração do visor
+        self.entry = tk.Entry(master, textvariable=self.expression,
+                              font=("Arial", 20), bd=10, relief="sunken",
+                              width=22, justify="right")
+        self.entry.grid(row=0, column=0, columnspan=4, padx=10, pady=10)
 
-entry_valor1 = tk.Entry(root, font=("Arial",14))
-entry_valor1.grid(row=0, column=1, padx=10, pady=10)
+        # Definindo os botões e sua posição na grade (row, col)
+        # Para o botão '=' foi definido um "columnspan" de 4 para ocupar toda a linha.
+        buttons = [
+            ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('/', 1, 3),
+            ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
+            ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
+            ('0', 4, 0), ('.', 4, 1), ('C', 4, 2), ('+', 4, 3),
+            ('(', 5, 0), (')', 5, 1), ('√', 5, 2), ('exp', 5, 3),
+            ('=', 6, 0, 4)  # Botão '=' ocupa 4 colunas
+        ]
 
-entry_valor2 = tk.Entry(root, font=("Arial",14))
-entry_valor2.grid(row=1, column=1, padx=10, pady=10)
+        # Criação e posicionamento dos botões
+        for button in buttons:
+            if len(button) == 3:
+                text, row, col = button
+                colspan = 1
+            else:
+                text, row, col, colspan = button
 
-botao_somar = tk.Button(root, text="Somar",font=("Arial",14), command=somar)
-botao_somar.grid(row=2, column=0, columnspan=2,pady=10)
+            # Define a ação de cada botão
+            if text == 'C':
+                action = self.clear
+            elif text == '=':
+                action = self.calculate
+            elif text == '√':
+                # Ao pressionar '√', insere "sqrt(" no visor
+                action = lambda char="sqrt(": self.press(char)
+            elif text == 'exp':
+                # Ao pressionar 'exp', insere "exp(" no visor
+                action = lambda char="exp(": self.press(char)
+            else:
+                # Para os demais, insere o próprio caractere clicado
+                action = lambda char=text: self.press(char)
 
-label_resultado = tk.Label(root,text="Resultado",font=("Arial,14"))
-label_resultado.grid(row=3, column=0, columnspan=2, pady=10)
+            btn = tk.Button(master, text=text, font=("Arial", 20),
+                            width=5, height=2, command=action)
+            btn.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5)
 
-#função para atualizar o visor com os numeros e operações 
+    def press(self, char):
+        """Adiciona o caractere à expressão do visor."""
+        current_expr = self.expression.get()
+        self.expression.set(current_expr + char)
 
-def press(Key):
-    current = visor.get()
-    visor.set(current + str(Key))
+    def clear(self):
+        """Limpa o visor."""
+        self.expression.set("")
 
-#função para calcular o resultado
-def calcular():
-    try:
-        result = eval(visor.get())
-        visor.set(result)
-    except Exception as e:
-        visor.set("Erro")
+    def calculate(self):
+        """Avalia a expressão do visor e mostra o resultado."""
+        try:
+            # Ambiente com funções matemáticas permitidas
+            allowed_names = {"sqrt": math.sqrt, "exp": math.exp}
+            # Avalia a expressão com um ambiente sem builtins (para segurança)
+            result = eval(self.expression.get(), {"__builtins__": None}, allowed_names)
+            self.expression.set(result)
+        except Exception:
+            self.expression.set("Erro")
 
-#função para limpar o visor 
-def limpar():
-    visor.set("")
-
-#criando janela principal 
-root = tk.Tk()
-root.title("Calculadora do Rafael")
-
-#definindo o visor da calculadora 
-visor = tk.Tk()
-root.title("Calculadora do Rafael")
-
-#definindo o visor da calculadora
-visor = tk.StringVar()
-entry = tk.Entry(root, textvariable=visor, font = ("Arial", 20), bd = 10, relief = "sunken", width = 16, justify = "right")
-entry.grid(row = 0, column = 0, columnspan = 4)
-
-#definindo os botões
-buttons = [
-        ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('/', 1, 3),
-        ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
-        ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
-        ('0', 4, 0), ('C', 4, 1), ('=', 4, 2), ('+', 4, 3),
-]
-
-#adicionando os botões a janela
-for(text, row, col) in buttons:
-    if text == '=':
-        buttons = tk.Button(root, text = text, font = ("Arial", 20), width = 5, height = 2, command = calcular)
-    elif text == 'C':
-        buttons = tk.Button(root, text = text, font = ("Arial", 20), width = 5, height = 2, command = limpar)
-    else:
-        buttons = tk.Button(root, text = text, font = ("Arial", 20), width = 5, height = 2, command = lambda key = text: press(key))
-        buttons.grid(row = row, column = col)
-
-#iniciar a interface gráfica
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = CalculatorApp(root)
+    root.mainloop()
