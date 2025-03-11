@@ -1,16 +1,16 @@
 let array = [];
 
 function adicionarItem(tarefa, itemParagrafo) {
-  if (tarefa != null) {
+  if (tarefa != null && tarefa.trim() !== '') {
     array.push(tarefa);
-    itemParagrafo = array.join(', ');
+    itemParagrafo.textContent = array.join(', ');
   }
 }
 
 function removerItem(tarefa, itemParagrafo) {
   let indice = array.indexOf(tarefa);
 
-  if (tarefa !== -1) {
+  if (indice !== -1) {
     array.splice(indice, 1);
     itemParagrafo.textContent = array.join(', ');
   }
