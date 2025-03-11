@@ -17,7 +17,7 @@ function calcularRaiz() {
   const resultadoDiv = document.getElementById('resultado');
 
   if (isNaN(numero)) {
-    resultadoDiv.textContent = 'PorrobPor favor, insira um número válido.';
+    resultadoDiv.textContent = 'Por favor, insira um número válido.';
     console.log('Erro: Número inválido fornecido para raiz.');
   } else {
     const resultado = calcularRaizQuadrada(numero);
