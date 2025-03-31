@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produto</title>
+</head>
+<body>
+  <h1>Teste</h1>
+  <form>
+    <input type="button" onclick="preencheProdutosDoBanco()" name="carregar" value="Carregar" />
+    <br /><br />
+
+    <fieldset>
+      <input type="text" id="input-nome" placeholder="nome" /><br />
+      <input type="text" id="input-descricao" placeholder="descrição" /><br />
+      <input type="text" id="input-quantidade" placeholder="quantidade" /><br />
+      <input type="button" onclick="insereProduto()" name="Enviar" value="Enviar" />
+    </fieldset>
+    <br /><br />
+    <table border="1">
+      <thead>
+        <th>ID</th>
+        <th>nome</th>
+        <th>descrição</th>
+        <th>quantidade</th>
+        <th>Ação</th>
+      </thead>
+      <tbody id="tabela-produtos"></tbody>
+    </table>
+    <div id="valor"></div>
+  </form>
+
+  <script>
+    function insereProduto() {
+      const nome = document.getElementById("input-nome").value;
+      const descricao = document.getElementById("input-descricao").value;
+      const quantidade = document.getElementById("input-quantidade").value;
+
+      if (!nome || !descricao || !quantidade) {
+        alert("Por favor, preencha todos os campos!");
+        return;
+      }
+
+      fetch('http://localhost:8080/produto', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: nome,
+          descricao: descricao,
+          quantidade: quantidade
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          adicionaProdutoNaTabela(data);
+          limpaCampos();
+        })
+        .catch(error => console.error('Erro:', error));
+    }
+
+    function adicionaProdutoNaTabela(produto) {
+      const tabelaProdutos = document.getElementById("tabela-produtos");
+      const novaLinha = document.createElement("tr");
+      novaLinha.setAttribute("data-id", produto.id);
+      novaLinha.innerHTML = `
+        <td>${produto.id}</td>
+        <td>${produto.nome}</td>
+        <td>${produto.descricao}</td>
+        <td>${produto.quantidade}</td>
+        <td><button onclick="deletaProduto(${produto.id})">Deletar</button></td>
+      `;
+      tabelaProdutos.appendChild(novaLinha);
+    }
+
+    function limpaCampos() {
+      document.getElementById("input-nome").value = "";
+      document.getElementById("input-descricao").value = "";
+      document.getElementById("input-quantidade").value = "";
+    }
+
+    function preencheProdutosDoBanco() {
+      fetch("http://localhost:8080/produto")
+        .then(response => response.json())
+        .then(data => formataComoTabela(data))
+        .catch(error => console.error("Erro:", error));
+    }
+
+    function formataComoTabela(data) {
+      const tabelaProdutos = document.getElementById("tabela-produtos");
+      tabelaProdutos.innerHTML = "";
+      data.forEach(produto => {
+        const novaLinha = document.createElement("tr");
+        novaLinha.setAttribute("data-id", produto.id);
+        novaLinha.innerHTML = `
+          <td>${produto.id}</td>
+          <td>${produto.nome}</td>
+          <td>${produto.descricao}</td>
+          <td>${produto.quantidade}</td>
+          <td><button onclick="deletaProduto(${produto.id})">Deletar</button></td>
+        `;
+        tabelaProdutos.appendChild(novaLinha);
+      });
+    }
+
+    function deletaProduto(id) {
+      fetch(`http://localhost:8080/produto/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            // Remove a linha apenas se o servidor confirmar a exclusão
+            const linha = document.querySelector(`tr[data-id="${id}"]`);
+            if (linha) {
+              linha.remove();
+              console.log(`Produto ${id} deletado com sucesso`);
+            }
+          } else {
+            // Exibe um alerta se o servidor retornar um erro
+            return response.text().then(text => {
+              throw new Error(`Erro ao deletar o produto: ${response.status} - ${text}`);
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          alert('Falha ao deletar o produto. Verifique o console para mais detalhes.');
+        });
+    }
+  </script>
+</body>
+</html>
